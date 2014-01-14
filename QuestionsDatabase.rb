@@ -15,7 +15,9 @@ end
 
 class User
   # raise "User already exists!" unless self.id.nil?
-  attr_reader :id, :fname, :lname
+  attr_reader :id
+  attr_accessor :fname, :lname
+
 
   def self.find_by_id(id)
    options = QuestionsDatabase.instance.execute(<<-SQL, id)
@@ -64,6 +66,30 @@ class User
     @lname = options["lname"]
   end
 
+  def save
+    # LETS TEST THIS AFTER LECTURE
+    if @id.nil?
+      QuestionsDatabase.instance.execute(<<-SQL, @fname, @lname)
+      INSERT INTO
+        users (fname, lname)
+      VALUES
+        (?, ?)
+      SQL
+      @id = QuestionsDatabase.instance.last_insert_row_id
+    else
+      QuestionsDatabase.instance.execute(<<-SQL, @fname, @lname, @id)
+      UPDATE
+        users
+      SET
+        fname = ?, lname = ?
+      WHERE
+        id = ?
+      SQL
+    end
+
+    nil
+  end
+
   def authored_questions
     Question.find_by_user_id(@id)
   end
@@ -74,6 +100,31 @@ class User
 
   def followed_questions
     QuestionFollower.followed_questions_for_user_id(@id)
+  end
+
+  def liked_questions
+    QuestionLike.liked_questions_for_user_id(@id)
+  end
+
+  def average_karma
+    QuestionsDatabase.instance.execute(<<-SQL, @id)
+        SELECT
+        /* doesn't round up! */
+          ROUND(num_likes / my_qid)
+        FROM (
+          SELECT
+            COUNT(liked) num_likes, my_q.id my_qid
+          FROM
+            question_likes ql INNER JOIN (
+              SELECT
+                *
+              FROM
+                questions
+              WHERE
+                user_id = ?) my_q
+            ON ql.question_id = my_q.id
+          WHERE ql.liked = 'true') x
+    SQL
   end
 
 end
@@ -110,6 +161,10 @@ class Question
    SQL
 
    Question.new(options[0])
+  end
+
+  def self.most_liked(n)
+    QuestionLike.most_liked_questions(n)
   end
 
   def initialize(options = {})
@@ -368,11 +423,51 @@ class QuestionLike
     liked_questions
   end
 
+  def self.most_liked_questions(n)
+    liked_count = QuestionsDatabase.instance.execute(<<-SQL, n)
+      SELECT
+        q.title, q.body
+      FROM questions q INNER JOIN (
+        SELECT
+          question_id, COUNT(id)
+        FROM
+          question_likes
+        WHERE
+          liked = 'true'
+        GROUP BY
+          question_id
+        ORDER BY
+          COUNT(id) DESC
+        LIMIT
+          ?) num_likes
+      ON num_likes.question_id = q.id
+
+    SQL
+
+    liked_count
+  end
+
   def initialize(options = {})
     @id = options["id"]
     @question_id = options["question_id"]
     @user_id = options["user_id"]
     @liked = options["liked"]
+  end
+
+end
+
+class Tags
+
+  def self.most_popular(n)
+    # returns the n most popular (tot # of likes for all questions for a given tag) tags.
+  end
+
+  def initialize
+
+  end
+
+  def most_popular_questions(n)
+    # returns the n most popular (# of likes) questions for tag.
   end
 
 end
