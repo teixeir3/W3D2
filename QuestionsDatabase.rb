@@ -41,7 +41,21 @@ class User
     SQL
 
     User.new(options[0])
+  end
 
+  def self.get_author_name(id)
+    options = QuestionsDatabase.instance.execute(<<-SQL, id)
+      SELECT
+        *
+      FROM
+        users
+      WHERE
+        id = ?
+    SQL
+
+    author = User.new(options[0])
+
+    "#{author.fname} #{author.lname}"
   end
 
   def initialize(options = {})
@@ -100,6 +114,14 @@ class Question
     @title = options["title"]
     @body = options["body"]
     @user_id = options["user_id"]
+  end
+
+  def author
+    User.get_author_name(@user_id)
+  end
+
+  def replies
+
   end
 
 end
