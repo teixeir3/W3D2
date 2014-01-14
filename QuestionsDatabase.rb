@@ -210,6 +210,15 @@ class Reply
     @body = options["body"]
   end
 
+  def author
+    User.get_author_name(@user_id)
+  end
+
+  def parent_author
+    parent = Reply.find_by_id(@parent_id)
+    parent.author
+  end
+
 end
 
 class QuestionLike
