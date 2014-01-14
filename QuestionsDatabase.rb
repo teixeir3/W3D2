@@ -224,6 +224,19 @@ class Reply
     parent.author
   end
 
+  def child_replies
+    options = QuestionsDatabase.instance.execute(<<-SQL, @id)
+      SELECT
+        *
+      FROM
+        replies
+      WHERE
+        parent_id = ?
+    SQL
+
+    child_replies = options.map { |option| Reply.new(option) }
+  end
+
 end
 
 class QuestionLike
