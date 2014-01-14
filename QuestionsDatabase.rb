@@ -143,6 +143,31 @@ class QuestionFollower
    QuestionFollower.new(options[0])
   end
 
+  def self.followers_for_question_id(question_id)
+    followers = QuestionsDatabase.instance.execute(<<-SQL, question_id)
+      SELECT
+        u.id
+      FROM
+        question_followers q JOIN users u
+        ON q.user_id = u.id
+      WHERE
+        question_id = ?
+    SQL
+
+    followers_str = ""
+
+    follower_ids = []
+    followers.each do |follower|
+      follower_ids << follower["id"]
+    end
+
+    follower_ids.each do |id|
+      followers_str += "#{User.get_author_name(id)}\n\n"
+    end
+
+    followers_str
+  end
+
   def initialize(options = {})
     @id = options["id"]
     @question_id = options["question_id"]
