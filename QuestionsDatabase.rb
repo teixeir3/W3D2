@@ -168,6 +168,23 @@ class QuestionFollower
     followers_str
   end
 
+  def self.followed_questions_for_user_id(user_id)
+    questions = QuestionsDatabase.instance.execute(<<-SQL, user_id)
+      SELECT
+        q.title, q.body
+      FROM
+        question_followers qf INNER JOIN questions q
+        ON qf.question_id = q.id
+      WHERE
+        qf.user_id = ?
+      GROUP BY
+        q.user_id
+    SQL
+
+    questions
+    # returns an array of hashes including question title and body for particular user!
+  end
+
   def initialize(options = {})
     @id = options["id"]
     @question_id = options["question_id"]
