@@ -131,6 +131,13 @@ class Question
     QuestionFollower.followers_for_question_id(@id)
   end
 
+  def likers
+    QuestionLike::likers_for_question_id(@id)
+  end
+
+  def num_likes
+    QuestionLike::num_liked_for_question_id(@id)
+  end
 end
 
 class QuestionFollower
