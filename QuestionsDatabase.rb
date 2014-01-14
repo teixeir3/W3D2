@@ -121,7 +121,7 @@ class Question
   end
 
   def replies
-
+    Reply.get_replies_by_question(@id)
   end
 
 end
@@ -179,6 +179,27 @@ class Reply
    SQL
 
    Reply.new(options[0])
+  end
+
+  def self.get_replies_by_question(question_id)
+    options = QuestionsDatabase.instance.execute(<<-SQL, question_id)
+      SELECT
+        *
+      FROM
+        replies
+      WHERE
+        question_id = ?
+    SQL
+
+    replies = options.map { |option| Reply.new(option) }
+
+    all_replies_str = ""
+
+    replies.each do |reply|
+      all_replies_str += "#{reply.body}\n\n"
+    end
+
+    all_replies_str
   end
 
   def initialize(options = {})
