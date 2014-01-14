@@ -17,12 +17,6 @@ class User
   # raise "User already exists!" unless self.id.nil?
   attr_reader :id, :fname, :lname
 
-  def initialize(options = {})
-    @id = options["id"]
-    @fname = options["fname"]
-    @lname = options["lname"]
-  end
-
   def self.find_by_id(id)
    options = QuestionsDatabase.instance.execute(<<-SQL, id)
      SELECT
@@ -36,17 +30,56 @@ class User
    User.new(options[0])
   end
 
+  def self.find_by_name(fname, lname)
+    options = QuestionsDatabase.instance.execute(<<-SQL, fname, lname)
+      SELECT
+        *
+      FROM
+        users
+      WHERE
+        fname = ? AND lname = ?
+    SQL
+
+    User.new(options[0])
+
+  end
+
+  def initialize(options = {})
+    @id = options["id"]
+    @fname = options["fname"]
+    @lname = options["lname"]
+  end
+
+  def authored_questions
+    Question.find_by_user_id(@id)
+  end
+
+  def authored_replies
+
+  end
+
 end
 
 class Question
 
   attr_reader :id, :title, :body, :user_id
 
-  def initialize(options = {})
-    @id = options["id"]
-    @title = options["title"]
-    @body = options["body"]
-    @user_id = options["user_id"]
+  def self.find_by_author_id
+    # will want to use this in authored questions
+
+  end
+
+  def self.find_by_user_id(user_id)
+    options = QuestionsDatabase.instance.execute(<<-SQL, user_id)
+      SELECT
+        *
+      FROM
+        questions
+      WHERE
+        user_id = ?
+    SQL
+
+    options.map { |option| Question.new(option) }
   end
 
   def self.find_by_id(id)
@@ -62,17 +95,18 @@ class Question
    Question.new(options[0])
   end
 
+  def initialize(options = {})
+    @id = options["id"]
+    @title = options["title"]
+    @body = options["body"]
+    @user_id = options["user_id"]
+  end
+
 end
 
 class QuestionFollower
 
   attr_reader :id, :question_id, :user_id
-
-  def initialize(options = {})
-    @id = options["id"]
-    @question_id = options["question_id"]
-    @user_id = options["user_id"]
-  end
 
   def self.find_by_id(id)
    options = QuestionsDatabase.instance.execute(<<-SQL, id)
@@ -87,18 +121,29 @@ class QuestionFollower
    QuestionFollower.new(options[0])
   end
 
+  def initialize(options = {})
+    @id = options["id"]
+    @question_id = options["question_id"]
+    @user_id = options["user_id"]
+  end
+
 end
 
 class Reply
 
   attr_reader :id, :question_id, :user_id, :parent_id, :body
 
-  def initialize(options = {})
-    @id = options["id"]
-    @question_id = options["question_id"]
-    @user_id = options["user_id"]
-    @parent_id = options["parent_id"]
-    @body = options["body"]
+  def self.find_by_user_id(user_id)
+    options = QuestionsDatabase.instance.execute(<<-SQL, user_id)
+      SELECT
+        *
+      FROM
+        replies
+      WHERE
+        user_id = ?
+    SQL
+
+    options.map { |option| Reply.new(option) }
   end
 
   def self.find_by_id(id)
@@ -114,18 +159,19 @@ class Reply
    Reply.new(options[0])
   end
 
+  def initialize(options = {})
+    @id = options["id"]
+    @question_id = options["question_id"]
+    @user_id = options["user_id"]
+    @parent_id = options["parent_id"]
+    @body = options["body"]
+  end
+
 end
 
 class QuestionLike
 
   attr_reader :id, :question_id, :user_id, :liked
-
-  def initialize(options = {})
-    @id = options["id"]
-    @question_id = options["question_id"]
-    @user_id = options["user_id"]
-    @liked = options["liked"]
-  end
 
   def self.find_by_id(id)
    options = QuestionsDatabase.instance.execute(<<-SQL, id)
@@ -138,6 +184,13 @@ class QuestionLike
    SQL
 
    QuestionLike.new(options[0])
+  end
+
+  def initialize(options = {})
+    @id = options["id"]
+    @question_id = options["question_id"]
+    @user_id = options["user_id"]
+    @liked = options["liked"]
   end
 
 end
