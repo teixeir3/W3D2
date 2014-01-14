@@ -72,6 +72,10 @@ class User
     Reply.find_by_user_id(@id)
   end
 
+  def followed_questions
+    QuestionFollower.followed_questions_for_user_id(@id)
+  end
+
 end
 
 class Question
@@ -124,11 +128,32 @@ class Question
     Reply.get_replies_by_question(@id)
   end
 
+  def question_followers
+    QuestionFollower.followers_for_question_id(@id)
+  end
+
 end
 
 class QuestionFollower
 
   attr_reader :id, :question_id, :user_id
+
+  def self.most_followed_questions(n)
+    follower_count = QuestionsDatabase.instance.execute(<<-SQL, n)
+      SELECT
+        COUNT(id)
+      FROM
+        question_followers
+      GROUP BY
+        question_id
+      ORDER BY
+        COUNT(id) DESC
+      LIMIT
+        ?
+    SQL
+
+    follower_count
+  end
 
   def self.find_by_id(id)
    options = QuestionsDatabase.instance.execute(<<-SQL, id)
