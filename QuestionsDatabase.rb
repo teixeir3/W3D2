@@ -67,7 +67,6 @@ class User
   end
 
   def save
-    # LETS TEST THIS AFTER LECTURE
     if @id.nil?
       QuestionsDatabase.instance.execute(<<-SQL, @fname, @lname)
       INSERT INTO
@@ -131,7 +130,8 @@ end
 
 class Question
 
-  attr_reader :id, :title, :body, :user_id
+  attr_reader :id, :user_id
+  attr_accessor :title, :body
 
   def self.most_followed(n)
     QuestionFollower::most_followed_questions(n)
@@ -172,6 +172,29 @@ class Question
     @title = options["title"]
     @body = options["body"]
     @user_id = options["user_id"]
+  end
+
+  def save
+    if @id.nil?
+      QuestionsDatabase.instance.execute(<<-SQL, @title, @body, @user_id)
+      INSERT INTO
+        questions (title, body, user_id)
+      VALUES
+        (?, ?, ?)
+      SQL
+      @id = QuestionsDatabase.instance.last_insert_row_id
+    else
+      QuestionsDatabase.instance.execute(<<-SQL, @title, @body, @user_id, @id)
+      UPDATE
+        questions
+      SET
+        title = ?, body = ?, user_id = ?
+      WHERE
+        id = ?
+      SQL
+    end
+
+    nil
   end
 
   def author
@@ -281,7 +304,8 @@ end
 
 class Reply
 
-  attr_reader :id, :question_id, :user_id, :parent_id, :body
+  attr_reader :id, :question_id, :user_id, :parent_id
+  attr_accessor :body
 
   def self.find_by_user_id(user_id)
     options = QuestionsDatabase.instance.execute(<<-SQL, user_id)
@@ -336,6 +360,29 @@ class Reply
     @user_id = options["user_id"]
     @parent_id = options["parent_id"]
     @body = options["body"]
+  end
+
+  def save
+    if @id.nil?
+      QuestionsDatabase.instance.execute(<<-SQL, @question_id, @user_id, @parent_id, @body)
+      INSERT INTO
+        replies (question_id, user_id, parent_id, body)
+      VALUES
+        (?, ?, ?, ?)
+      SQL
+      @id = QuestionsDatabase.instance.last_insert_row_id
+    else
+      QuestionsDatabase.instance.execute(<<-SQL, @question_id, @user_id, @parent_id, @body, @id)
+      UPDATE
+        replies
+      SET
+        question_id = ?, user_id = ?, parent_id = ?, body = ?
+      WHERE
+        id = ?
+      SQL
+    end
+
+    nil
   end
 
   def author
