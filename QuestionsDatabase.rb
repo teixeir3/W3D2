@@ -214,8 +214,13 @@ class Reply
     User.get_author_name(@user_id)
   end
 
+  def parent_reply
+    raise "Original reply; has no parent." if @parent_id.nil?
+    Reply.find_by_id(@parent_id)
+  end
+
   def parent_author
-    parent = Reply.find_by_id(@parent_id)
+    parent = parent_reply
     parent.author
   end
 
