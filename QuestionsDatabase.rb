@@ -503,14 +503,37 @@ class QuestionLike
 
 end
 
-class Tags
+class Tag
 
   def self.most_popular(n)
     # returns the n most popular (tot # of likes for all questions for a given tag) tags.
+    tag_count = QuestionsDatabase.instance.execute(<<-SQL, n)
+      SELECT
+        q.title, q.body
+      FROM questions q INNER JOIN (
+        SELECT
+          question_id, COUNT(id)
+        FROM
+          question_tags
+        WHERE
+          name IS NOT NULL
+        GROUP BY
+          question_id
+        ORDER BY
+          COUNT(id) DESC
+        LIMIT
+          ?) num_tags
+      ON num_tags.question_id = q.id
+
+    SQL
+
+    tag_count
   end
 
-  def initialize
-
+  def initialize(options = {})
+    @id = options["id"]
+    @name = options["name"]
+    @question_id = options["question_id"]
   end
 
   def most_popular_questions(n)
