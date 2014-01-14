@@ -82,9 +82,8 @@ class Question
 
   attr_reader :id, :title, :body, :user_id
 
-  def self.find_by_author_id
-    # will want to use this in authored questions
-
+  def self.most_followed(n)
+    QuestionFollower::most_followed_questions(n)
   end
 
   def self.find_by_user_id(user_id)
