@@ -323,7 +323,7 @@ class QuestionLike
   end
 
   def self.num_liked_for_question_id(question_id)
-    options = QuestionsDatabase.instance.execute(<<-SQL, question_id)
+    num_liked = QuestionsDatabase.instance.execute(<<-SQL, question_id)
       SELECT
         COUNT(liked) num_liked
       FROM
@@ -332,11 +332,11 @@ class QuestionLike
         ql.question_id = ? AND ql.liked = 'true'
     SQL
 
-    options
+    num_liked
   end
 
   def self.likers_for_question_id(question_id)
-    options = QuestionsDatabase.instance.execute(<<-SQL, question_id)
+    liker_name = QuestionsDatabase.instance.execute(<<-SQL, question_id)
       SELECT
         u.fname, u.lname
       FROM
@@ -345,7 +345,20 @@ class QuestionLike
         ql.question_id = ? AND ql.liked = 'true'
     SQL
 
-    options
+    liker_name
+  end
+
+  def self.liked_questions_for_user_id(user_id)
+    liked_questions = QuestionsDatabase.instance.execute(<<-SQL, user_id)
+      SELECT
+        q.title, q.body
+      FROM
+        question_likes ql INNER JOIN questions q ON ql.question_id = q.id
+      WHERE
+        ql.user_id = ? AND ql.liked = 'true'
+    SQL
+
+    liked_questions
   end
 
   def initialize(options = {})
